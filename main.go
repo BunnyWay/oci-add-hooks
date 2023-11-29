@@ -30,6 +30,9 @@ func main() {
 	// self --version
 	// self --hook-config-path /path/to/hookcfg --runtime-path /path/to/kata, ... runtime flags
 	// If we don't match one of these these, we can exit
+
+	fmt.Printf("%+v\n", os.Args)
+
 	if len(os.Args) == 2 && os.Args[1] == "--version" {
 		fmt.Println("commit:", commit)
 		os.Exit(0)
@@ -40,10 +43,6 @@ func main() {
 	hookConfigPath := os.Args[2]
 	kataPath := os.Args[4]
 	passthroughArgs := os.Args[5:]
-
-	fmt.Printf("%+v\n", hookConfigPath)
-	fmt.Printf("%+v\n", kataPath)
-	fmt.Printf("%+v\n", passthroughArgs)
 
 	os.Exit(run(hookConfigPath, kataPath, passthroughArgs))
 }
@@ -83,6 +82,9 @@ func processBundle(hookPath, kataPath string, kataArgs []string) int {
 	if err != nil {
 		return exitCodeFailure
 	}
+
+	fmt.Printf("Processed bundle - not present at all in the call")
+
 	return launchKata(path, kataArgs)
 }
 
