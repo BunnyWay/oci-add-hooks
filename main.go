@@ -40,6 +40,11 @@ func main() {
 	hookConfigPath := os.Args[2]
 	kataPath := os.Args[4]
 	passthroughArgs := os.Args[5:]
+
+	fmt.Printf("%+v\n", hookConfigPath)
+	fmt.Printf("%+v\n", kataPath)
+	fmt.Printf("%+v\n", passthroughArgs)
+
 	os.Exit(run(hookConfigPath, kataPath, passthroughArgs))
 }
 
