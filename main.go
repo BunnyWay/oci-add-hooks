@@ -28,7 +28,7 @@ func main() {
 	// ones. Just requiring positional arguments for simplicity.
 	// We are expecting command line like one of the following:
 	// self --version
-	// self --hook-config-path /path/to/hookcfg --runtime-path /path/to/runc, ... runtime flags
+	// self --hook-config-path /path/to/hookcfg --runtime-path /path/to/kata, ... runtime flags
 	// If we don't match one of these these, we can exit
 	if len(os.Args) == 2 && os.Args[1] == "--version" {
 		fmt.Println("commit:", commit)
@@ -38,28 +38,28 @@ func main() {
 	}
 	// If are args are present, grab the values
 	hookConfigPath := os.Args[2]
-	runcPath := os.Args[4]
+	kataPath := os.Args[4]
 	passthroughArgs := os.Args[5:]
-	os.Exit(run(hookConfigPath, runcPath, passthroughArgs))
+	os.Exit(run(hookConfigPath, kataPath, passthroughArgs))
 }
 
-func run(hookConfigPath, runcPath string, runcArgs []string) int {
+func run(hookConfigPath, kataPath string, kataArgs []string) int {
 	// If required args aren't present, bail
-	if hookConfigPath == "" || runcPath == "" {
+	if hookConfigPath == "" || kataPath == "" {
 		return exitCodeFailure
 	}
 
 	// If a hookConfigPath passed, process the bundle and pass modified
-	// spec to runc
-	return processBundle(hookConfigPath, runcPath, runcArgs)
+	// spec to kata
+	return processBundle(hookConfigPath, kataPath, kataArgs)
 }
 
-func processBundle(hookPath, runcPath string, runcArgs []string) int {
+func processBundle(hookPath, kataPath string, kataArgs []string) int {
 	// find the bundle json location
-	for i, val := range runcArgs {
-		if val == "--bundle" && i != len(runcArgs)-1 {
+	for i, val := range kataArgs {
+		if val == "--bundle" && i != len(kataArgs)-1 {
 			// get the bundle Path
-			bundlePath := runcArgs[i+1]
+			bundlePath := kataArgs[i+1]
 			bundlePath = filepath.Join(bundlePath, "config.json")
 			// Add the hooks from hookPath to our bundle/config.json
 			merged, err := addHooks(bundlePath, hookPath)
@@ -73,25 +73,25 @@ func processBundle(hookPath, runcPath string, runcArgs []string) int {
 			break
 		}
 	}
-	// launch runc
-	path, err := verifyRuntimePath(runcPath)
+	// launch kata
+	path, err := verifyRuntimePath(kataPath)
 	if err != nil {
 		return exitCodeFailure
 	}
-	return launchRunc(path, runcArgs)
+	return launchKata(path, kataArgs)
 }
 
-func verifyRuntimePath(userDefinedRuncPath string) (string, error) {
-	info, err := os.Stat(userDefinedRuncPath)
+func verifyRuntimePath(userDefinedKataPath string) (string, error) {
+	info, err := os.Stat(userDefinedKataPath)
 	if err == nil && !info.Mode().IsDir() && info.Mode().IsRegular() {
-		return userDefinedRuncPath, nil
+		return userDefinedKataPath, nil
 	}
 	return "", errUnableToFindRuntime
 }
 
-// Launch runc with the provided args
-func launchRunc(runcPath string, runcArgs []string) int {
-	cmd := prepareCommand(runcPath, runcArgs)
+// Launch kata with the provided args
+func launchKata(kataPath string, kataArgs []string) int {
+	cmd := prepareCommand(kataPath, kataArgs)
 	proc := make(chan os.Signal, signalBufferSize)
 	// Handle signals before we start command to make sure we don't
 	// miss any related to cmd.
@@ -109,10 +109,10 @@ func launchRunc(runcPath string, runcArgs []string) int {
 
 	err = cmd.Wait()
 
-	return processRuncError(err)
+	return processKataError(err)
 }
 
-func processRuncError(err error) int {
+func processKataError(err error) int {
 	if err != nil {
 		if exit, ok := err.(*exec.ExitError); ok {
 			// We had a nonzero exitCode
@@ -128,8 +128,8 @@ func processRuncError(err error) int {
 	return 0
 }
 
-func prepareCommand(runcPath string, args []string) *exec.Cmd {
-	cmd := exec.Command(runcPath, args...)
+func prepareCommand(kataPath string, args []string) *exec.Cmd {
+	cmd := exec.Command(kataPath, args...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
