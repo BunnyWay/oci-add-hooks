@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func TestKataError(t *testing.T) {
+func TestRuncError(t *testing.T) {
 	exitCmd := exec.Command("/bin/sh", "-c 'exit 2'")
 	exitErr := exitCmd.Run()
 	cases := []struct {
@@ -29,7 +29,7 @@ func TestKataError(t *testing.T) {
 		},
 	}
 	for _, c := range cases {
-		val := processKataError(c.err)
+		val := processRuncError(c.err)
 		if val != c.expected {
 			t.Errorf("Expected %d but got %d", c.expected, val)
 		}
